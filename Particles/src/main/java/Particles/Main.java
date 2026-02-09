@@ -1,4 +1,4 @@
-package org.example;
+package Particles;
 
 import Utils.Logger;
 import mpi.MPI;
@@ -8,24 +8,23 @@ public class Main {
     public static void main(String[] args) {
         SimulationConfig config = parseArgs(args);
 
-        ParticleSimulation simulation = new ParticleSimulation(config);
-
         long startTime = System.currentTimeMillis();
-
         if(config.mode == SimulationMode.SEQUENTIAL){
-            simulation.runSequential();
+            ParticleSimulationSequential sequentialSimulation = new ParticleSimulationSequential(config);
+            sequentialSimulation.runSequential();
         }
         else if (config.mode == SimulationMode.PARALLEL){
-            simulation.runParallel();
+            ParticleSimulationParallel parallelSimulation = new ParticleSimulationParallel(config);
+            parallelSimulation.runParallel();
         }
         else if (config.mode == SimulationMode.DISTRIBUTED){
             MPI.Init(args);
-            simulation.runDistributed();
-
-
+            ParticleSimulationDistributed distributedSimulation = new ParticleSimulationDistributed(config);
+            distributedSimulation.runDistributed();
         }
 
         long endTime = System.currentTimeMillis();
+
         if(config.mode == SimulationMode.DISTRIBUTED && MPI.COMM_WORLD.Rank() == 0) {
             Logger.info("Simulation completed in " + (endTime - startTime) + " ms");
             Logger.info("Cycles: " + config.cycles);
@@ -76,6 +75,15 @@ public class Main {
                 }
                 else if(args[i].equals("--boundary")){
                     config.boundaryCharge = Double.parseDouble(args[i+1]);
+                }
+                else if(args[i].equals("--damping")){
+                    config.damping = Double.parseDouble(args[i+1]);
+                }
+                else if(args[i].equals("--minDistance")){
+                    config.minimumDistance = Double.parseDouble(args[i+1]);
+                }
+                else if(args[i].equals("--maxSpeed")){
+                    config.maximumSpeed = Double.parseDouble(args[i+1]);
                 }
             }
             catch (Exception e){
